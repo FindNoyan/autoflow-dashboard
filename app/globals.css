@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --background: #101114;
+  --surface: #17181D;
+  --line: #26272E;
+  --ink: #EDEDEF;
+  --muted: #8A8B93;
+  --teal: #33D6A6;
+  --amber: #F2B84B;
+  --red: #F2685C;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-teal: var(--teal);
+  --color-amber: var(--amber);
+  --color-red: var(--red);
+  --font-display: var(--font-space-grotesk);
+  --font-body: var(--font-inter);
+  --font-data: var(--font-jetbrains);
+}
+
+body {
+  background: var(--background);
+  color: var(--ink);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.status-dot--active {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot--active { animation: none; }
+}
+
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
