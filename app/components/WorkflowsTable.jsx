@@ -1,12 +1,5 @@
 import StatusDot from "./StatusDot";
-
-const WORKFLOWS = [
-  { name: "New lead → CRM sync", status: "active", lastRun: "3 min ago", successRate: 99 },
-  { name: "Invoice reminder emails", status: "active", lastRun: "18 min ago", successRate: 100 },
-  { name: "Weekly report digest", status: "paused", lastRun: "2 days ago", successRate: 96 },
-  { name: "Order fulfillment webhook", status: "failed", lastRun: "1 hr ago", successRate: 82 },
-  { name: "Slack standup summary", status: "active", lastRun: "42 min ago", successRate: 100 },
-];
+import { workflows } from "../data/dashboard";
 
 export default function WorkflowsTable() {
   return (
@@ -18,14 +11,14 @@ export default function WorkflowsTable() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line bg-surface text-xs text-muted">
-              <th className="px-4 py-3 font-normal">Name</th>
-              <th className="px-4 py-3 font-normal">Status</th>
-              <th className="px-4 py-3 font-normal">Last run</th>
-              <th className="px-4 py-3 font-normal">Success rate</th>
+              <th scope="col" className="px-4 py-3 font-normal">Name</th>
+              <th scope="col" className="px-4 py-3 font-normal">Status</th>
+              <th scope="col" className="px-4 py-3 font-normal">Last run</th>
+              <th scope="col" className="px-4 py-3 font-normal">Success rate</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {WORKFLOWS.map((flow) => (
+            {workflows.map((flow) => (
               <tr key={flow.name} className="hover:bg-surface/60">
                 <td className="px-4 py-3 text-ink">{flow.name}</td>
                 <td className="px-4 py-3">
