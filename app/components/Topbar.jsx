@@ -13,7 +13,7 @@ export default function Topbar() {
         <span className="rounded-md border border-line px-3 py-1.5 font-data text-xs text-muted">
           Last synced 2m ago
         </span>
-        <div className="h-8 w-8 rounded-full bg-teal/20 border border-teal/40" />
+        <div aria-hidden="true" className="h-8 w-8 rounded-full bg-teal/20 border border-teal/40" />
       </div>
     </header>
   );

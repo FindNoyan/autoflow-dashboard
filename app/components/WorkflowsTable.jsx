@@ -11,10 +11,10 @@ export default function WorkflowsTable() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line bg-surface text-xs text-muted">
-              <th className="px-4 py-3 font-normal">Name</th>
-              <th className="px-4 py-3 font-normal">Status</th>
-              <th className="px-4 py-3 font-normal">Last run</th>
-              <th className="px-4 py-3 font-normal">Success rate</th>
+              <th scope="col" className="px-4 py-3 font-normal">Name</th>
+              <th scope="col" className="px-4 py-3 font-normal">Status</th>
+              <th scope="col" className="px-4 py-3 font-normal">Last run</th>
+              <th scope="col" className="px-4 py-3 font-normal">Success rate</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
