@@ -1,9 +1,4 @@
-const RUNS = [
-  { workflow: "New lead → CRM sync", time: "10:42 AM", status: "success" },
-  { workflow: "Order fulfillment webhook", time: "10:15 AM", status: "failed" },
-  { workflow: "Slack standup summary", time: "9:58 AM", status: "success" },
-  { workflow: "Invoice reminder emails", time: "9:40 AM", status: "success" },
-];
+import { runs } from "../data/dashboard";
 
 const BORDER = {
   success: "border-teal",
@@ -17,20 +12,16 @@ export default function RunsFeed() {
         Recent runs
       </h2>
       <ul className="mt-4 space-y-3">
-        {RUNS.map((run, i) => (
+        {runs.map((run) => (
           <li
-            key={i}
+            key={run.id}
             className={`border-l-2 ${BORDER[run.status]} bg-surface px-4 py-3`}
           >
             <div className="flex items-center justify-between">
               <p className="text-sm text-ink">{run.workflow}</p>
               <span className="font-data text-xs text-muted">{run.time}</span>
             </div>
-            <p className="mt-1 text-xs text-muted">
-              {run.status === "success"
-                ? "Completed without errors"
-                : "Failed — webhook returned a 500"}
-            </p>
+            <p className="mt-1 text-xs text-muted">{run.detail}</p>
           </li>
         ))}
       </ul>

@@ -1,16 +1,11 @@
-const LINKS = [
-  { label: "Overview", active: true },
-  { label: "Workflows" },
-  { label: "Runs" },
-  { label: "Settings" },
-];
+import { sidebarLinks } from "../data/dashboard";
 
 export default function Sidebar() {
   return (
     <aside className="hidden w-56 shrink-0 border-r border-line px-5 py-6 sm:block">
       <p className="font-display text-lg font-semibold text-ink">AutoFlow</p>
       <nav className="mt-8 flex flex-col gap-1">
-        {LINKS.map((link) => (
+        {sidebarLinks.map((link) => (
           <a
             key={link.label}
             href="#"
