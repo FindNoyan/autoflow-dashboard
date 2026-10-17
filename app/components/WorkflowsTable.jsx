@@ -1,7 +1,12 @@
 import StatusDot from "./StatusDot";
 import { workflows } from "../data/dashboard";
 
-export default function WorkflowsTable() {
+// Renders the workflows table. `items` overrides the demo workflows —
+// the dashboard passes the logged-in user's real workflows (mapped to
+// { name, status, lastRun, successRate }). With no `items`, demo data
+// is shown.
+export default function WorkflowsTable({ items }) {
+  const rows = items ?? workflows;
   return (
     <section className="px-6 py-8 sm:px-8">
       <h2 className="font-display text-base font-semibold text-ink">
@@ -18,7 +23,7 @@ export default function WorkflowsTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {workflows.map((flow) => (
+            {rows.map((flow) => (
               <tr key={flow.name} className="hover:bg-surface/60">
                 <td className="px-4 py-3 text-ink">{flow.name}</td>
                 <td className="px-4 py-3">
