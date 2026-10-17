@@ -8,7 +8,7 @@ Next.js (App Router) and Tailwind CSS v4.
 
 - Next.js 16 (App Router)
 - Tailwind CSS v4
-- Supabase (Postgres + Auth, Step 1: schema + auth pages, dashboard still demo data)
+- Supabase (Postgres + Auth, Step 1: schema + auth pages, Step 2: dashboard reads real user data)
 - Space Grotesk, Inter, JetBrains Mono (Google Fonts)
 
 ## Getting started
@@ -42,8 +42,28 @@ Do this once. Never share keys in chat. Never commit `.env`.
    For local dev, copy `.env.example` to `.env.local` and fill in the same
    two values. `.env.local` is git-ignored.
 
-Then open `/signup` to create an account, `/login` to sign in. The home
-dashboard is still the public demo until Step 2 wires it to real data.
+Then open `/signup` to create an account, `/login` to sign in.
+
+## Step 2 — Real data
+
+The dashboard reads from Supabase when a user is logged in, and shows
+demo data otherwise:
+
+- **Logged out (or Supabase not configured):** the public demo page is
+  shown unchanged, with a "Demo data — log in to see your workflows"
+  label. The page is NOT locked.
+- **Logged in:** the dashboard shows THAT user's own workflows, runs,
+  and stats from Supabase (RLS enforced — users never see each other's
+  rows). Stats are computed from real data: total runs, success rate,
+  time saved as an honest estimate (15 min per successful run), active
+  workflows. With no runs, values are 0 — never faked.
+- **Logged in, no data yet:** a friendly empty state with a
+  "Load demo workflows" button. Clicking it inserts the 5 demo workflows
+  + 4 runs into THAT user's account only. Nothing is auto-seeded.
+
+How to test (live): log in → empty state → click "Load demo workflows"
+→ real rows appear → refresh (rows persist) → log out (demo data +
+label return).
 
 ## Build
 
