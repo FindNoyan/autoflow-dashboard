@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import StatsRow from "./StatsRow";
-import WorkflowsTable from "./WorkflowsTable";
+import WorkflowsSection from "./WorkflowsSection";
 import RunsFeed from "./RunsFeed";
 import { getSupabaseClient } from "../../lib/supabase/client";
 import {
@@ -149,7 +149,7 @@ export default function DashboardBody() {
           to see your workflows.
         </p>
         <StatsRow />
-        <WorkflowsTable />
+        <WorkflowsSection key="demo" />
         <RunsFeed />
       </>
     );
@@ -232,7 +232,7 @@ export default function DashboardBody() {
         Your workflows — saved to your account.
       </p>
       <StatsRow items={stats} />
-      <WorkflowsTable items={toTableWorkflows(workflows)} />
+      <WorkflowsSection key="real" items={toTableWorkflows(workflows)} />
       <RunsFeed items={toFeedRuns(runs)} />
     </>
   );
