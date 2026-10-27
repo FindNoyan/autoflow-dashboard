@@ -5,16 +5,23 @@ import WorkflowsTable from "./WorkflowsTable";
 import WorkflowsFilter from "./WorkflowsFilter";
 import { workflows } from "../data/dashboard";
 import { distinctStatuses, filterWorkflows } from "../../lib/workflows/filter";
+import { sortWorkflows } from "../../lib/workflows/sort";
 
 // The workflows section: heading + filter controls + table.
-// Owns the filter state. Accepts `items` ({ name, status, lastRun,
+// Owns the filter and sort state. Accepts `items` ({ name, status, lastRun,
 // successRate }) — the logged-in user's real rows; with no `items`,
 // the public demo rows render.
 // DashboardBody remounts this with a different `key` when switching
-// between demo and real data, so a stale filter never carries over.
+// between demo and real data, so a stale filter or sort never carries over.
+// Rows are filtered first, then sorted, so sorting never resurrects a
+// row the filter excluded.
 export default function WorkflowsSection({ items }) {
   const [status, setStatus] = useState("all");
   const [query, setQuery] = useState("");
+  // No sort until the user clicks a column header, so the initial order
+  // stays exactly the data order the dashboard already showed.
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDirection, setSortDirection] = useState("asc");
 
   const source = items ?? workflows;
 
@@ -32,6 +39,25 @@ export default function WorkflowsSection({ items }) {
     () => filterWorkflows(source, { status, query }),
     [source, status, query]
   );
+  const sorted = useMemo(
+    () =>
+      sortKey
+        ? sortWorkflows(filtered, { key: sortKey, direction: sortDirection })
+        : filtered,
+    [filtered, sortKey, sortDirection]
+  );
+
+  const handleSortChange = (key) => {
+    if (sortKey === key) {
+      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      // First click picks the useful direction: A-Z for names, most
+      // recent first for last run (ascending minutes ago), and highest
+      // rate first for success rate.
+      setSortDirection(key === "successRate" ? "desc" : "asc");
+    }
+  };
 
   const clearFilters = () => {
     setStatus("all");
@@ -53,8 +79,13 @@ export default function WorkflowsSection({ items }) {
         onStatusChange={setStatus}
         onQueryChange={setQuery}
       />
-      {filtered.length > 0 ? (
-        <WorkflowsTable items={filtered} />
+      {sorted.length > 0 ? (
+        <WorkflowsTable
+          items={sorted}
+          sortKey={sortKey}
+          sortDirection={sortDirection}
+          onSortChange={handleSortChange}
+        />
       ) : (
         <div className="mt-4 rounded-lg border border-line p-8 text-center">
           <p className="text-sm text-muted">
