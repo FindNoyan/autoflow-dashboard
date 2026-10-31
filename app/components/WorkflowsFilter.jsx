@@ -62,3 +62,5 @@ export default function WorkflowsFilter({
         Showing {shown} of {total} workflows
       </p>
     </div>
+  );
+}

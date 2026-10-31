@@ -1,6 +1,7 @@
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import DashboardBody from "./components/DashboardBody";
+import ChatWidget from "./components/ChatWidget";
 
 export default function Home() {
   return (
@@ -10,6 +11,7 @@ export default function Home() {
         <Topbar />
         <DashboardBody />
       </div>
+      <ChatWidget />
     </div>
   );
 }
