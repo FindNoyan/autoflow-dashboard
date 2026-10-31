@@ -65,6 +65,33 @@ How to test (live): log in → empty state → click "Load demo workflows"
 → real rows appear → refresh (rows persist) → log out (demo data +
 label return).
 
+## Step 3 — AI chatbot
+
+A floating chat button at the bottom-right of the dashboard opens a
+360px panel with three suggested questions ("Which workflow failed
+most recently?", "What is my success rate?", "Which workflows are
+paused?"), a typing state, and an error + retry state.
+
+- **Logged in:** questions go to the server-only `/api/chat` route.
+  The browser sends its Supabase access token, the route validates it,
+  then loads only that user's workflows and runs through RLS and
+  answers from those rows. The Gemini key (server env var
+  `GEMINI_API_KEY`, never `NEXT_PUBLIC_`, never committed) is used
+  when configured; without it, the three suggested questions are still
+  answered deterministically from the user's real data, and other
+  questions return a plain "AI unavailable" error instead of an
+  invented answer. User + assistant messages are saved to
+  `chat_messages` and reloaded when the panel opens.
+- **Logged out:** answers are computed locally from the public demo
+  data only, labelled "Demo data", and no request is sent anywhere.
+  Visitors can never reach the AI route or see another user's data.
+
+How to test (live): log in → click the chat button → ask a suggested
+question → the answer must match your real rows → refresh (chat
+history persists) → log out → the same question gives the labelled
+demo answer. Add `GEMINI_API_KEY` in Vercel → Project → Settings →
+Environment Variables for full AI answers to any question.
+
 ## Build
 
 ```bash
