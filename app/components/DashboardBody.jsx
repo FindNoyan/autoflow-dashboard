@@ -232,7 +232,7 @@ export default function DashboardBody() {
         Your workflows — saved to your account.
       </p>
       <StatsRow items={stats} />
-      <WorkflowsSection key="real" items={toTableWorkflows(workflows)} />
+      <WorkflowsSection key="real" items={toTableWorkflows(workflows)} runs={toFeedRuns(runs)} />
       <RunsFeed items={toFeedRuns(runs)} />
     </>
   );
