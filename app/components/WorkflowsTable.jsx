@@ -10,11 +10,15 @@ import { workflows } from "../data/dashboard";
 // `sortKey` / `sortDirection` describe the current sort and
 // `onSortChange` is called with the clicked column key. Only Name,
 // Last run, and Success rate are sortable; Status is display-only.
+// `onSelect` is called with the clicked row's workflow — the section
+// opens its detail panel. The name is a real button, so the table stays
+// keyboard-usable and the sort buttons are unaffected.
 export default function WorkflowsTable({
   items,
   sortKey,
   sortDirection,
   onSortChange,
+  onSelect,
 }) {
   const rows = items ?? workflows;
 
@@ -59,7 +63,15 @@ export default function WorkflowsTable({
         <tbody className="divide-y divide-line">
           {rows.map((flow) => (
             <tr key={flow.name} className="hover:bg-surface/60">
-              <td className="px-4 py-3 text-ink">{flow.name}</td>
+              <td className="px-4 py-3 text-ink">
+                <button
+                  type="button"
+                  onClick={() => onSelect?.(flow)}
+                  className="text-left hover:underline"
+                >
+                  {flow.name}
+                </button>
+              </td>
               <td className="px-4 py-3">
                 <span className="flex items-center gap-2 capitalize text-muted">
                   <StatusDot status={flow.status} />
