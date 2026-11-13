@@ -3,27 +3,35 @@
 import { useMemo, useState } from "react";
 import WorkflowsTable from "./WorkflowsTable";
 import WorkflowsFilter from "./WorkflowsFilter";
-import { workflows } from "../data/dashboard";
+import WorkflowDetail from "./WorkflowDetail";
+import { runs as demoRuns, workflows } from "../data/dashboard";
 import { distinctStatuses, filterWorkflows } from "../../lib/workflows/filter";
 import { sortWorkflows } from "../../lib/workflows/sort";
 
-// The workflows section: heading + filter controls + table.
-// Owns the filter and sort state. Accepts `items` ({ name, status, lastRun,
-// successRate }) — the logged-in user's real rows; with no `items`,
-// the public demo rows render.
+// The workflows section: heading + filter controls + table + detail panel.
+// Owns the filter, sort, and selected-workflow state. Accepts `items`
+// ({ name, status, lastRun, successRate }) — the logged-in user's real
+// rows; with no `items`, the public demo rows render. Accepts `runs`
+// ({ id, workflow, time, status, detail }) — the logged-in user's real
+// runs; with no `runs`, the public demo runs render. Clicking a workflow
+// name opens its detail panel below the table; Close hides it. The
+// selected workflow is looked up from the filtered + sorted rows, so a
+// selection the current filter hides simply closes the panel.
 // DashboardBody remounts this with a different `key` when switching
-// between demo and real data, so a stale filter or sort never carries over.
-// Rows are filtered first, then sorted, so sorting never resurrects a
-// row the filter excluded.
-export default function WorkflowsSection({ items }) {
+// between demo and real data, so a stale filter, sort, or selection never
+// carries over. Rows are filtered first, then sorted, so sorting never
+// resurrects a row the filter excluded.
+export default function WorkflowsSection({ items, runs }) {
   const [status, setStatus] = useState("all");
   const [query, setQuery] = useState("");
   // No sort until the user clicks a column header, so the initial order
   // stays exactly the data order the dashboard already showed.
   const [sortKey, setSortKey] = useState(null);
   const [sortDirection, setSortDirection] = useState("asc");
+  const [selectedName, setSelectedName] = useState(null);
 
   const source = items ?? workflows;
+  const runSource = runs ?? demoRuns;
 
   const statuses = useMemo(() => distinctStatuses(source), [source]);
   const counts = useMemo(() => {
@@ -46,6 +54,9 @@ export default function WorkflowsSection({ items }) {
         : filtered,
     [filtered, sortKey, sortDirection]
   );
+  const selected = selectedName
+    ? sorted.find((row) => row.name === selectedName) ?? null
+    : null;
 
   const handleSortChange = (key) => {
     if (sortKey === key) {
@@ -85,6 +96,7 @@ export default function WorkflowsSection({ items }) {
           sortKey={sortKey}
           sortDirection={sortDirection}
           onSortChange={handleSortChange}
+          onSelect={(flow) => setSelectedName(flow.name)}
         />
       ) : (
         <div className="mt-4 rounded-lg border border-line p-8 text-center">
@@ -99,6 +111,13 @@ export default function WorkflowsSection({ items }) {
             Clear filters
           </button>
         </div>
+      )}
+      {selected && (
+        <WorkflowDetail
+          workflow={selected}
+          runs={runSource}
+          onClose={() => setSelectedName(null)}
+        />
       )}
     </section>
   );
