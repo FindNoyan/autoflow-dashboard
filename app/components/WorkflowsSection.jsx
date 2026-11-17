@@ -7,6 +7,11 @@ import WorkflowDetail from "./WorkflowDetail";
 import { runs as demoRuns, workflows } from "../data/dashboard";
 import { distinctStatuses, filterWorkflows } from "../../lib/workflows/filter";
 import { sortWorkflows } from "../../lib/workflows/sort";
+import {
+  applyRetriedRuns,
+  applyStatusOverrides,
+  toggleWorkflowStatus,
+} from "../../lib/workflows/actions";
 
 // The workflows section: heading + filter controls + table + detail panel.
 // Owns the filter, sort, and selected-workflow state. Accepts `items`
@@ -21,6 +26,13 @@ import { sortWorkflows } from "../../lib/workflows/sort";
 // between demo and real data, so a stale filter, sort, or selection never
 // carries over. Rows are filtered first, then sorted, so sorting never
 // resurrects a row the filter excluded.
+// Pause / resume and retry are local UI state, kept here in
+// `statusOverrides` (workflow name -> status) and `retriedRunIds`.
+// They change only what this browser session shows — a paused workflow
+// keeps running for real, and a retried run is not re-executed — and
+// they reset on login/logout (same remount as the filter) or with the
+// "Reset local changes" button. Filter counts and the detail panel read
+// the overridden rows, so a paused workflow counts as paused everywhere.
 export default function WorkflowsSection({ items, runs }) {
   const [status, setStatus] = useState("all");
   const [query, setQuery] = useState("");
@@ -29,23 +41,36 @@ export default function WorkflowsSection({ items, runs }) {
   const [sortKey, setSortKey] = useState(null);
   const [sortDirection, setSortDirection] = useState("asc");
   const [selectedName, setSelectedName] = useState(null);
+  const [statusOverrides, setStatusOverrides] = useState({});
+  const [retriedRunIds, setRetriedRunIds] = useState([]);
 
   const source = items ?? workflows;
   const runSource = runs ?? demoRuns;
 
-  const statuses = useMemo(() => distinctStatuses(source), [source]);
+  const displayed = useMemo(
+    () => applyStatusOverrides(source, statusOverrides),
+    [source, statusOverrides]
+  );
+  const displayedRuns = useMemo(
+    () => applyRetriedRuns(runSource, retriedRunIds),
+    [runSource, retriedRunIds]
+  );
+  const hasLocalChanges =
+    Object.keys(statusOverrides).length > 0 || retriedRunIds.length > 0;
+
+  const statuses = useMemo(() => distinctStatuses(displayed), [displayed]);
   const counts = useMemo(() => {
     const c = {};
-    source.forEach((row) => {
+    displayed.forEach((row) => {
       if (row.status) {
         c[row.status] = (c[row.status] ?? 0) + 1;
       }
     });
     return c;
-  }, [source]);
+  }, [displayed]);
   const filtered = useMemo(
-    () => filterWorkflows(source, { status, query }),
-    [source, status, query]
+    () => filterWorkflows(displayed, { status, query }),
+    [displayed, status, query]
   );
   const sorted = useMemo(
     () =>
@@ -75,15 +100,50 @@ export default function WorkflowsSection({ items, runs }) {
     setQuery("");
   };
 
+  // Toggle from the row's current (already overridden) status, so
+  // pausing then resuming returns the workflow to its real status.
+  const handleToggleStatus = (flow) => {
+    setStatusOverrides((prev) => ({
+      ...prev,
+      [flow.name]: toggleWorkflowStatus(flow.status),
+    }));
+  };
+
+  const handleRetryRun = (run) => {
+    setRetriedRunIds((prev) =>
+      prev.includes(run.id) ? prev : [...prev, run.id]
+    );
+  };
+
+  const resetLocalChanges = () => {
+    setStatusOverrides({});
+    setRetriedRunIds([]);
+  };
+
   return (
     <section className="px-6 py-8 sm:px-8">
       <h2 className="font-display text-base font-semibold text-ink">
         Workflows
       </h2>
+      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p className="text-xs text-muted">
+          Pause, resume, and retry are local to this browser — they do not
+          change your saved workflows.
+        </p>
+        {hasLocalChanges && (
+          <button
+            type="button"
+            onClick={resetLocalChanges}
+            className="text-xs text-muted underline hover:text-ink"
+          >
+            Reset local changes
+          </button>
+        )}
+      </div>
       <WorkflowsFilter
         statuses={statuses}
         counts={counts}
-        total={source.length}
+        total={displayed.length}
         shown={filtered.length}
         status={status}
         query={query}
@@ -97,6 +157,7 @@ export default function WorkflowsSection({ items, runs }) {
           sortDirection={sortDirection}
           onSortChange={handleSortChange}
           onSelect={(flow) => setSelectedName(flow.name)}
+          onToggleStatus={handleToggleStatus}
         />
       ) : (
         <div className="mt-4 rounded-lg border border-line p-8 text-center">
@@ -115,8 +176,9 @@ export default function WorkflowsSection({ items, runs }) {
       {selected && (
         <WorkflowDetail
           workflow={selected}
-          runs={runSource}
+          runs={displayedRuns}
           onClose={() => setSelectedName(null)}
+          onRetryRun={handleRetryRun}
         />
       )}
     </section>

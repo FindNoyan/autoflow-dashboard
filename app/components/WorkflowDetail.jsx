@@ -15,7 +15,12 @@ const BORDER = {
 // for this workflow, the empty state renders instead of a blank list.
 // `onClose` hides the panel. Unknown run statuses fall back to the amber
 // border, same as RunsFeed.
-export default function WorkflowDetail({ workflow, runs, onClose }) {
+// `onRetryRun` is called with a failed run — the section marks that run
+// "retried". Like pausing, retrying is local UI state only: it changes
+// what the dashboard shows in this browser session and does not re-run
+// anything or write to the database. A retried run shows no Retry
+// button, so the same run cannot be retried twice.
+export default function WorkflowDetail({ workflow, runs, onClose, onRetryRun }) {
   const workflowRuns = runsForWorkflow(runs, workflow.name);
   return (
     <div
@@ -66,9 +71,21 @@ export default function WorkflowDetail({ workflow, runs, onClose }) {
               key={run.id}
               className={`border-l-2 ${BORDER[run.status] || "border-amber"} px-4 py-3`}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-sm capitalize text-ink">{run.status}</p>
-                <span className="font-data text-xs text-muted">{run.time}</span>
+                <span className="flex items-center gap-2">
+                  <span className="font-data text-xs text-muted">{run.time}</span>
+                  {run.status === "failed" && (
+                    <button
+                      type="button"
+                      onClick={() => onRetryRun?.(run)}
+                      aria-label={`Retry ${run.workflow} run from ${run.time}`}
+                      className="rounded-md border border-line px-2 py-0.5 text-xs text-muted hover:text-ink"
+                    >
+                      Retry
+                    </button>
+                  )}
+                </span>
               </div>
               <p className="mt-1 text-xs text-muted">{run.detail}</p>
             </li>
