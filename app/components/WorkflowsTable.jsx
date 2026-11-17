@@ -1,5 +1,6 @@
 import StatusDot from "./StatusDot";
 import { workflows } from "../data/dashboard";
+import { actionLabelForStatus } from "../../lib/workflows/actions";
 
 // Renders just the workflows table — no heading or section wrapper.
 // WorkflowsSection owns the section heading, filter controls, and sort
@@ -13,12 +14,17 @@ import { workflows } from "../data/dashboard";
 // `onSelect` is called with the clicked row's workflow — the section
 // opens its detail panel. The name is a real button, so the table stays
 // keyboard-usable and the sort buttons are unaffected.
+// `onToggleStatus` is called with the clicked row's workflow — the
+// section pauses an active workflow or resumes a paused / failed one.
+// The toggle is local UI state only: it changes what the dashboard
+// shows in this browser session and never writes to the database.
 export default function WorkflowsTable({
   items,
   sortKey,
   sortDirection,
   onSortChange,
   onSelect,
+  onToggleStatus,
 }) {
   const rows = items ?? workflows;
 
@@ -58,6 +64,7 @@ export default function WorkflowsTable({
             <th scope="col" aria-sort={ariaSort("successRate")} className="px-4 py-3 font-normal">
               {sortButton("successRate", "Success rate")}
             </th>
+            <th scope="col" className="px-4 py-3 font-normal">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
@@ -93,6 +100,16 @@ export default function WorkflowsTable({
                     {flow.successRate}%
                   </span>
                 </div>
+              </td>
+              <td className="px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => onToggleStatus?.(flow)}
+                  aria-label={`${actionLabelForStatus(flow.status)} ${flow.name}`}
+                  className="rounded-md border border-line px-2.5 py-1 text-xs text-muted hover:text-ink"
+                >
+                  {actionLabelForStatus(flow.status)}
+                </button>
               </td>
             </tr>
           ))}
