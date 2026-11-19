@@ -5,6 +5,7 @@ import Link from "next/link";
 import StatsRow from "./StatsRow";
 import WorkflowsSection from "./WorkflowsSection";
 import RunsFeed from "./RunsFeed";
+import RefreshControl from "./RefreshControl";
 import { getSupabaseClient } from "../../lib/supabase/client";
 import {
   computeStats,
@@ -19,6 +20,9 @@ import {
 // - Logged in: the user's own real workflows/runs/stats from Supabase.
 // - Logged in but no rows yet: a friendly empty state with an explicit
 //   "Load demo workflows" button — nothing is seeded automatically.
+// Refresh (roadmap item 8): a Refresh button above the Recent runs feed
+// re-fetches the data and shows a "Last synced" time that only updates
+// after a successful fetch.
 function toTableWorkflows(rows) {
   return rows.map((row) => ({
     name: row.name,
@@ -47,13 +51,18 @@ export default function DashboardBody() {
   const [error, setError] = useState("");
   const [seeding, setSeeding] = useState(false);
   const [seedError, setSeedError] = useState("");
+  const [lastSynced, setLastSynced] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState("");
 
-  const loadRealData = useCallback(async () => {
+  const loadRealData = useCallback(async ({ quiet = false } = {}) => {
     const supabase = getSupabaseClient();
     if (!supabase) {
-      return;
+      return false;
     }
-    setLoadingData(true);
+    if (!quiet) {
+      setLoadingData(true);
+    }
     setError("");
     try {
       const [fetchedWorkflows, fetchedRuns] = await Promise.all([
@@ -64,11 +73,23 @@ export default function DashboardBody() {
       setRuns(fetchedRuns);
       setStats(computeStats(fetchedWorkflows, fetchedRuns));
       setMode("real");
+      setLastSynced(new Date());
+      return true;
     } catch (e) {
-      setError(e.message || "Could not load your workflows.");
-      setMode("real");
+      if (quiet) {
+        // A failed refresh must not wipe the dashboard into the
+        // full-screen error state — the old data stays visible and the
+        // failure is shown next to the Refresh button instead.
+        setRefreshError(e.message || "Could not refresh.");
+      } else {
+        setError(e.message || "Could not load your workflows.");
+        setMode("real");
+      }
+      return false;
     } finally {
-      setLoadingData(false);
+      if (!quiet) {
+        setLoadingData(false);
+      }
     }
   }, []);
 
@@ -102,6 +123,8 @@ export default function DashboardBody() {
           setRuns([]);
           setStats(null);
           setError("");
+          setLastSynced(null);
+          setRefreshError("");
         }
       }
     );
@@ -134,6 +157,22 @@ export default function DashboardBody() {
     }
   }
 
+  async function handleRefresh() {
+    if (mode === "demo") {
+      // Demo data is static — there is nothing to re-fetch. Refreshing
+      // only records when the feed was last re-read.
+      setLastSynced(new Date());
+      return;
+    }
+    setRefreshing(true);
+    setRefreshError("");
+    try {
+      await loadRealData({ quiet: true });
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   if (mode === "checking") {
     return <p className="px-6 py-8 text-sm text-muted sm:px-8">Loading dashboard…</p>;
   }
@@ -150,6 +189,13 @@ export default function DashboardBody() {
         </p>
         <StatsRow />
         <WorkflowsSection key="demo" />
+        <RefreshControl
+          lastSynced={lastSynced}
+          refreshing={refreshing}
+          refreshError={refreshError}
+          onRefresh={handleRefresh}
+          demo
+        />
         <RunsFeed />
       </>
     );
@@ -233,6 +279,12 @@ export default function DashboardBody() {
       </p>
       <StatsRow items={stats} />
       <WorkflowsSection key="real" items={toTableWorkflows(workflows)} runs={toFeedRuns(runs)} />
+      <RefreshControl
+        lastSynced={lastSynced}
+        refreshing={refreshing}
+        refreshError={refreshError}
+        onRefresh={handleRefresh}
+      />
       <RunsFeed items={toFeedRuns(runs)} />
     </>
   );
