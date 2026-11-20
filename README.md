@@ -57,13 +57,19 @@ demo data otherwise:
   rows). Stats are computed from real data: total runs, success rate,
   time saved as an honest estimate (15 min per successful run), active
   workflows. With no runs, values are 0 — never faked.
+- **Refresh:** a Refresh button above the Recent runs feed re-fetches
+  the workflows + runs from Supabase without a full-page reload, and
+  shows a "Last synced" time that updates only after a successful
+  fetch. While it runs, the old data stays visible; a failed refresh
+  shows an inline error instead of wiping the dashboard. Logged out,
+  the demo data is static, so Refresh only updates the sync time.
 - **Logged in, no data yet:** a friendly empty state with a
   "Load demo workflows" button. Clicking it inserts the 5 demo workflows
   + 4 runs into THAT user's account only. Nothing is auto-seeded.
 
 How to test (live): log in → empty state → click "Load demo workflows"
-→ real rows appear → refresh (rows persist) → log out (demo data +
-label return).
+→ real rows appear → browser refresh (rows persist) → click Refresh
+(Last synced updates) → log out (demo data + label return).
 
 ## Step 3 — AI chatbot
 
