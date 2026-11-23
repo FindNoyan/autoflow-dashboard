@@ -63,13 +63,21 @@ demo data otherwise:
   fetch. While it runs, the old data stays visible; a failed refresh
   shows an inline error instead of wiping the dashboard. Logged out,
   the demo data is static, so Refresh only updates the sync time.
+- **Run details:** clicking a run in the Recent runs feed expands it
+  to show its status as text, and a failed run gets a Retry button
+  there — the same retry the workflow detail panel already had. A
+  retried run is marked "retried" in both places. Like pausing,
+  retrying is local to the browser: it does not re-run anything or
+  write to the database.
 - **Logged in, no data yet:** a friendly empty state with a
   "Load demo workflows" button. Clicking it inserts the 5 demo workflows
   + 4 runs into THAT user's account only. Nothing is auto-seeded.
 
 How to test (live): log in → empty state → click "Load demo workflows"
 → real rows appear → browser refresh (rows persist) → click Refresh
-(Last synced updates) → log out (demo data + label return).
+(Last synced updates) → expand a failed run in the feed and retry it
+(marked retried in the feed and in its workflow panel) → log out (demo
+data + label return).
 
 ## Step 3 — AI chatbot
 
