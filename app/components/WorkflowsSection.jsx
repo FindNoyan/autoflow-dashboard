@@ -26,14 +26,24 @@ import {
 // between demo and real data, so a stale filter, sort, or selection never
 // carries over. Rows are filtered first, then sorted, so sorting never
 // resurrects a row the filter excluded.
-// Pause / resume and retry are local UI state, kept here in
-// `statusOverrides` (workflow name -> status) and `retriedRunIds`.
-// They change only what this browser session shows — a paused workflow
-// keeps running for real, and a retried run is not re-executed — and
-// they reset on login/logout (same remount as the filter) or with the
-// "Reset local changes" button. Filter counts and the detail panel read
-// the overridden rows, so a paused workflow counts as paused everywhere.
-export default function WorkflowsSection({ items, runs }) {
+// Pause / resume and retry are local UI state. `statusOverrides`
+// (workflow name -> status) is kept here, because only this section
+// uses it. `retriedRunIds` lives in DashboardBody instead, so a run
+// retried in the workflow detail panel is also marked retried in the
+// Recent runs feed, and vice versa. Both reset on login/logout (the
+// section remounts, and DashboardBody clears the ids) or with the
+// "Reset local changes" button. They change only what this browser
+// session shows — a paused workflow keeps running for real, and a
+// retried run is not re-executed — and they never write to the
+// database. Filter counts and the detail panel read the overridden
+// rows, so a paused workflow counts as paused everywhere.
+export default function WorkflowsSection({
+  items,
+  runs,
+  retriedRunIds = [],
+  onRetryRun,
+  onResetRetriedRuns,
+}) {
   const [status, setStatus] = useState("all");
   const [query, setQuery] = useState("");
   // No sort until the user clicks a column header, so the initial order
@@ -42,7 +52,6 @@ export default function WorkflowsSection({ items, runs }) {
   const [sortDirection, setSortDirection] = useState("asc");
   const [selectedName, setSelectedName] = useState(null);
   const [statusOverrides, setStatusOverrides] = useState({});
-  const [retriedRunIds, setRetriedRunIds] = useState([]);
 
   const source = items ?? workflows;
   const runSource = runs ?? demoRuns;
@@ -110,14 +119,12 @@ export default function WorkflowsSection({ items, runs }) {
   };
 
   const handleRetryRun = (run) => {
-    setRetriedRunIds((prev) =>
-      prev.includes(run.id) ? prev : [...prev, run.id]
-    );
+    onRetryRun?.(run);
   };
 
   const resetLocalChanges = () => {
     setStatusOverrides({});
-    setRetriedRunIds([]);
+    onResetRetriedRuns?.();
   };
 
   return (

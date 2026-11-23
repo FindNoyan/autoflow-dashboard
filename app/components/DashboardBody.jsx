@@ -54,6 +54,19 @@ export default function DashboardBody() {
   const [lastSynced, setLastSynced] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState("");
+  // Retried run ids live here (not in WorkflowsSection) so the Recent
+  // runs feed and the workflow detail panel share one list: a run
+  // retried in either place shows as "retried" in both. Local UI state
+  // only — it never writes to the database and resets on logout.
+  const [retriedRunIds, setRetriedRunIds] = useState([]);
+
+  const handleRetryRun = (run) => {
+    setRetriedRunIds((prev) =>
+      prev.includes(run.id) ? prev : [...prev, run.id]
+    );
+  };
+
+  const resetRetriedRuns = () => setRetriedRunIds([]);
 
   const loadRealData = useCallback(async ({ quiet = false } = {}) => {
     const supabase = getSupabaseClient();
@@ -125,6 +138,7 @@ export default function DashboardBody() {
           setError("");
           setLastSynced(null);
           setRefreshError("");
+          setRetriedRunIds([]);
         }
       }
     );
@@ -188,7 +202,12 @@ export default function DashboardBody() {
           to see your workflows.
         </p>
         <StatsRow />
-        <WorkflowsSection key="demo" />
+        <WorkflowsSection
+          key="demo"
+          retriedRunIds={retriedRunIds}
+          onRetryRun={handleRetryRun}
+          onResetRetriedRuns={resetRetriedRuns}
+        />
         <RefreshControl
           lastSynced={lastSynced}
           refreshing={refreshing}
@@ -196,7 +215,7 @@ export default function DashboardBody() {
           onRefresh={handleRefresh}
           demo
         />
-        <RunsFeed />
+        <RunsFeed retriedRunIds={retriedRunIds} onRetryRun={handleRetryRun} />
       </>
     );
   }
@@ -278,14 +297,25 @@ export default function DashboardBody() {
         Your workflows — saved to your account.
       </p>
       <StatsRow items={stats} />
-      <WorkflowsSection key="real" items={toTableWorkflows(workflows)} runs={toFeedRuns(runs)} />
+      <WorkflowsSection
+        key="real"
+        items={toTableWorkflows(workflows)}
+        runs={toFeedRuns(runs)}
+        retriedRunIds={retriedRunIds}
+        onRetryRun={handleRetryRun}
+        onResetRetriedRuns={resetRetriedRuns}
+      />
       <RefreshControl
         lastSynced={lastSynced}
         refreshing={refreshing}
         refreshError={refreshError}
         onRefresh={handleRefresh}
       />
-      <RunsFeed items={toFeedRuns(runs)} />
+      <RunsFeed
+        items={toFeedRuns(runs)}
+        retriedRunIds={retriedRunIds}
+        onRetryRun={handleRetryRun}
+      />
     </>
   );
 }
